@@ -62,19 +62,36 @@ with app.app_context():
 # Главная страница
 @app.route('/')
 def index():
-    search = request.args.get('search', '')
+    # Получаем параметры фильтрации
+    search_query = request.args.get('search', '')
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
+    creator_filter = request.args.get('creator', '')
     
-    query = Product.query
-    if search:
-        query = query.filter(Product.name.contains(search) | Product.description.contains(search))
-    if min_price:
+    # Базовый запрос
+    query = Product.query.join(User)  # Добавляем join с User для фильтрации по автору
+    
+    # Применяем фильтры
+    if search_query:
+        query = query.filter(
+            db.or_(
+                Product.name.ilike(f'%{search_query}%'),
+                Product.description.ilike(f'%{search_query}%')
+            )
+        )
+    
+    if min_price is not None:
         query = query.filter(Product.price >= min_price)
-    if max_price:
+    
+    if max_price is not None:
         query = query.filter(Product.price <= max_price)
     
-    products = query.all()
+    if creator_filter:
+        query = query.filter(User.username.ilike(f'%{creator_filter}%'))
+    
+    # Получаем товары
+    products = query.order_by(Product.id.desc()).all()
+    
     return render_template('index.html', products=products)
 
 # Регистрация
@@ -320,6 +337,24 @@ def delete_product(product_id):
         flash(f'Error deleting product: {str(e)}', 'error')
     
     return redirect(url_for('my_products'))
+
+@app.route('/product/<int:product_id>')
+def product_detail(product_id):
+    product = Product.query.get_or_404(product_id)
+    
+    # Проверяем, находится ли товар в корзине текущего пользователя
+    in_cart = False
+    if 'user_id' in session:
+        in_cart = Cart.query.filter_by(
+            user_id=session['user_id'],
+            product_id=product.id
+        ).first() is not None
+    
+    return render_template(
+        'product_detail.html',
+        product=product,
+        in_cart=in_cart
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
