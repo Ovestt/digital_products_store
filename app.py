@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__, template_folder='templates')
@@ -163,8 +164,8 @@ def add_product():
             flash('Invalid files')
             return redirect(url_for('add_product'))
         
-        cover_path = os.path.join(app.config['UPLOAD_FOLDER'], f"cover_{session['user_id']}_{cover.filename}")
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"product_{session['user_id']}_{product_file.filename}")
+        cover_path = os.path.join(app.config['UPLOAD_FOLDER'], f"cover_{session['user_id']}_{secure_filename(cover.filename)}")
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"product_{session['user_id']}_{secure_filename(product_file.filename)}")        
         
         cover.save(cover_path)
         product_file.save(file_path)
@@ -309,7 +310,7 @@ def edit_product(product_id):
                     if os.path.exists(product.cover_image):
                         os.remove(product.cover_image)
                     # Сохраняем новую
-                    cover_path = os.path.join(app.config['UPLOAD_FOLDER'], f"cover_{session['user_id']}_{cover.filename}")
+                    cover_path = os.path.join(app.config['UPLOAD_FOLDER'], f"cover_{session['user_id']}_{secure_filename(cover.filename)}")                    
                     cover.save(cover_path)
                     product.cover_image = cover_path
             
@@ -367,6 +368,9 @@ def product_detail(product_id):
         product=product,
         in_cart=in_cart
     )
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
     app.run(debug=True)

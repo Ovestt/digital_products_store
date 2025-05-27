@@ -8,8 +8,8 @@
 <div class="products">
     {% for purchase in purchases %}
     <div class="product">
-        <img src="{{ url_for('static', filename=purchase.product.cover_image) }}" alt="{{ purchase.product.name }}"
-            width="200">
+        <img src="{{ url_for('uploaded_file', filename=purchase.product.cover_image.split('/')[-1]) }}"
+            alt="{{ purchase.product.name }}" width="200">
         <h3>{{ purchase.product.name }}</h3>
         <p>{{ purchase.product.description }}</p>
         <a href="{{ url_for('download', product_id=purchase.product.id) }}" class="download-btn">Скачать</a>
