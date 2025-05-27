@@ -3,11 +3,7 @@
 {% block content %}
 <div class="product-detail">
     <h1>{{ product.name }}</h1>
-<<<<<<< HEAD
     <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}" alt="{{ product.name }}" width="300">    
-=======
-    <img src="{{ url_for('static', filename=product.cover_image) }}" alt="{{ product.name }}" width="300">
->>>>>>> bc1aaa4 (rus)
     <p>{{ product.description }}</p>
     <p class="price">{{ product.price }} ₽</p>
     <p>Автор: {{ product.creator.username }}</p>
