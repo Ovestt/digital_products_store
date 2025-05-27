@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Your Cart</h1>
+<h1>Ваша корзина</h1>
 
 {% if products %}
 {% for product in products %}
 <div class="product">
     <img src="{{ url_for('static', filename=product.cover_image) }}" alt="{{ product.name }}" width="200">
     <h3>{{ product.name }}</h3>
-    <p>Price: ${{ product.price }}</p>
-    <a href="/remove_from_cart/{{ product.id }}">Remove</a>
+    <p>Цена: {{ product.price }} ₽</p>
+    <a href="/remove_from_cart/{{ product.id }}">Удалить</a>
 </div>
 {% endfor %}
 
-<p><strong>Total: ${{ total }}</strong></p>
-<a href="/checkout" class="checkout-btn">Checkout</a>
+<p><strong>Итого: {{ total }} ₽</strong></p>
+<a href="/checkout" class="checkout-btn">Оформить заказ</a>
 {% else %}
-<p>Your cart is empty</p>
+<p>Ваша корзина пуста</p>
 {% endif %}
 {% endblock %}

@@ -2,29 +2,29 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="my-4">Digital Products</h1>
+    <h1 class="my-4">Цифровые товары</h1>
 
     <!-- Форма фильтрации -->
     <form method="get" class="mb-4">
         <div class="row g-3">
             <div class="col-md-3">
-                <input type="text" name="search" class="form-control" placeholder="Search..."
+                <input type="text" name="search" class="form-control" placeholder="Поиск..."
                     value="{{ request.args.get('search', '') }}">
             </div>
             <div class="col-md-2">
-                <input type="number" name="min_price" class="form-control" placeholder="Min price" step="0.01"
+                <input type="number" name="min_price" class="form-control" placeholder="Мин. цена" step="0.01"
                     value="{{ request.args.get('min_price', '') }}">
             </div>
             <div class="col-md-2">
-                <input type="number" name="max_price" class="form-control" placeholder="Max price" step="0.01"
+                <input type="number" name="max_price" class="form-control" placeholder="Макс. цена" step="0.01"
                     value="{{ request.args.get('max_price', '') }}">
             </div>
             <div class="col-md-3">
-                <input type="text" name="creator" class="form-control" placeholder="Creator username"
+                <input type="text" name="creator" class="form-control" placeholder="Имя автора"
                     value="{{ request.args.get('creator', '') }}">
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                <button type="submit" class="btn btn-primary w-100">Фильтр</button>
             </div>
         </div>
 
@@ -33,7 +33,7 @@
         request.args.get('creator') %}
         <div class="mt-3">
             <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-x-circle"></i> Reset filters
+                <i class="bi bi-x-circle"></i> Сбросить фильтры
             </a>
         </div>
         {% endif %}
@@ -58,26 +58,26 @@
                     </h5>
 
                     <p class="card-text text-truncate">{{ product.description }}</p>
-                    <p class="text-success fw-bold">${{ "%.2f"|format(product.price) }}</p>
-                    <p class="text-muted small">By: {{ product.creator.username }}</p>
+                    <p class="text-success fw-bold">{{ "%.2f"|format(product.price) }} ₽</p>
+                    <p class="text-muted small">Автор: {{ product.creator.username }}</p>
                 </div>
 
                 <div class="card-footer bg-transparent">
                     <div class="d-flex justify-content-between align-items-center">
                         <a href="{{ url_for('product_detail', product_id=product.id) }}"
                             class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-eye"></i> Details
+                            <i class="bi bi-eye"></i> Подробнее
                         </a>
 
                         {% if 'user_id' in session and product.creator_id != session['user_id'] %}
                         {% set in_cart = product.id in current_user_cart %}
                         {% if in_cart %}
                         <button class="btn btn-sm btn-success" disabled>
-                            <i class="bi bi-check"></i> In Cart
+                            <i class="bi bi-check"></i> В корзине
                         </button>
                         {% else %}
                         <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-cart-plus"></i> Add to Cart
+                            <i class="bi bi-cart-plus"></i> В корзину
                         </a>
                         {% endif %}
                         {% endif %}
@@ -88,7 +88,7 @@
         {% else %}
         <div class="col-12">
             <div class="alert alert-info">
-                No products found. Try adjusting your filters.
+                Товары не найдены. Попробуйте изменить параметры фильтрации.
             </div>
         </div>
         {% endfor %}
