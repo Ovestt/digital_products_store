@@ -24,8 +24,13 @@
 
         <div class="mb-3">
             <label class="form-label">Текущая обложка</label><br>
+<<<<<<< HEAD
             <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}"
                 class="img-thumbnail mb-2" style="max-height: 200px;">
+=======
+            <img src="{{ url_for('static', filename=product.cover_image) }}" class="img-thumbnail mb-2"
+                style="max-height: 200px;">
+>>>>>>> bc1aaa4 (rus)
             <label for="cover" class="form-label">Новая обложка (необязательно)</label>
             <input type="file" class="form-control" id="cover" name="cover" accept="image/*">
         </div>

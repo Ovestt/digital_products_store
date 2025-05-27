@@ -6,7 +6,12 @@
 {% if products %}
 {% for product in products %}
 <div class="product">
+<<<<<<< HEAD
     <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}" alt="{{ product.name }}" width="200">    <h3>{{ product.name }}</h3>
+=======
+    <img src="{{ url_for('static', filename=product.cover_image) }}" alt="{{ product.name }}" width="200">
+    <h3>{{ product.name }}</h3>
+>>>>>>> bc1aaa4 (rus)
     <p>Цена: {{ product.price }} ₽</p>
     <a href="/remove_from_cart/{{ product.id }}">Удалить</a>
 </div>
