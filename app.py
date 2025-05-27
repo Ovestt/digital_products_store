@@ -93,6 +93,17 @@ def index():
     products = query.order_by(Product.id.desc()).all()
     
     return render_template('index.html', products=products)
+    # Получаем товары в корзине текущего пользователя (если он авторизован)
+    current_user_cart = []
+    if 'user_id' in session:
+        cart_items = Cart.query.filter_by(user_id=session['user_id']).all()
+        current_user_cart = [item.product_id for item in cart_items]
+    
+    return render_template(
+        'index.html', 
+        products=products,
+        current_user_cart=current_user_cart  # Передаем список ID товаров в корзине
+    )
 
 # Регистрация
 @app.route('/register', methods=['GET', 'POST'])
@@ -342,13 +353,14 @@ def delete_product(product_id):
 def product_detail(product_id):
     product = Product.query.get_or_404(product_id)
     
-    # Проверяем, находится ли товар в корзине текущего пользователя
+    # Проверяем, находится ли товар в корзине
     in_cart = False
     if 'user_id' in session:
-        in_cart = Cart.query.filter_by(
+        cart_item = Cart.query.filter_by(
             user_id=session['user_id'],
             product_id=product.id
-        ).first() is not None
+        ).first()
+        in_cart = cart_item is not None
     
     return render_template(
         'product_detail.html',

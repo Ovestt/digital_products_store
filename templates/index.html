@@ -70,8 +70,7 @@
                         </a>
 
                         {% if 'user_id' in session and product.creator_id != session['user_id'] %}
-                        {% set in_cart = Cart.query.filter_by(user_id=session['user_id'], product_id=product.id).first()
-                        %}
+                        {% set in_cart = product.id in current_user_cart %}
                         {% if in_cart %}
                         <button class="btn btn-sm btn-success" disabled>
                             <i class="bi bi-check"></i> In Cart
