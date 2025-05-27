@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Your Profile</h1>
+<h2>Purchased Products</h2>
+
+{% if purchases %}
+<div class="products">
+    {% for purchase in purchases %}
+    <div class="product">
+        <img src="{{ url_for('static', filename=purchase.product.cover_image) }}" alt="{{ purchase.product.name }}"
+            width="200">
+        <h3>{{ purchase.product.name }}</h3>
+        <p>{{ purchase.product.description }}</p>
+        <a href="{{ url_for('download', product_id=purchase.product.id) }}" class="download-btn">Download</a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p>You haven't purchased any products yet.</p>
+{% endif %}
+{% endblock %}

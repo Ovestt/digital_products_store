@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Digital Store{% block title %}{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        nav {
+            background: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        nav a {
+            margin-right: 15px;
+        }
+
+        .flash {
+            padding: 10px;
+            background: #eee;
+            margin-bottom: 10px;
+        }
+
+        .product {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: inline-block;
+            width: 30%;
+            margin: 10px;
+        }
+
+        .product img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        form {
+            margin: 20px 0;
+        }
+
+        input,
+        textarea {
+            display: block;
+            margin: 5px 0 15px;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="/">Home</a>
+        {% if 'user_id' in session %}
+        <a href="/add_product">Add Product</a>
+        <a href="/my_products">My Products</a>
+        <a href="/cart">Cart</a>
+        <a href="/profile">Profile</a>
+        <a href="/logout">Logout ({{ session['username'] }})</a>
+        {% else %}
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+        {% endif %}
+    </nav>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="flash">
+        {% for message in messages %}
+        {{ message }}
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</body>
+
+</html>
