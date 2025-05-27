@@ -225,6 +225,7 @@ button:hover,
 /* Подтверждение удаления */
 .confirm-delete {
     color: #dc3545;
+<<<<<<< HEAD
 }
 /* Стили для страницы товара */
 .product-image-container {
@@ -275,4 +276,6 @@ button:hover,
 
 .card:hover .product-image {
     transform: scale(1.05);
+=======
+>>>>>>> c9fe6c5 (work)
 }

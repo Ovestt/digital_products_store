@@ -62,6 +62,7 @@ with app.app_context():
 # Главная страница
 @app.route('/')
 def index():
+<<<<<<< HEAD
     # Получаем параметры фильтрации
     search_query = request.args.get('search', '')
     min_price = request.args.get('min_price', type=float)
@@ -92,6 +93,21 @@ def index():
     # Получаем товары
     products = query.order_by(Product.id.desc()).all()
     
+=======
+    search = request.args.get('search', '')
+    min_price = request.args.get('min_price', type=float)
+    max_price = request.args.get('max_price', type=float)
+    
+    query = Product.query
+    if search:
+        query = query.filter(Product.name.contains(search) | Product.description.contains(search))
+    if min_price:
+        query = query.filter(Product.price >= min_price)
+    if max_price:
+        query = query.filter(Product.price <= max_price)
+    
+    products = query.all()
+>>>>>>> c9fe6c5 (work)
     return render_template('index.html', products=products)
 
 # Регистрация
@@ -338,6 +354,7 @@ def delete_product(product_id):
     
     return redirect(url_for('my_products'))
 
+<<<<<<< HEAD
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     product = Product.query.get_or_404(product_id)
@@ -356,6 +373,8 @@ def product_detail(product_id):
         in_cart=in_cart
     )
 
+=======
+>>>>>>> c9fe6c5 (work)
 if __name__ == '__main__':
     app.run(debug=True)
 

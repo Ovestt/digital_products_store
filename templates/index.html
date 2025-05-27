@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<<<<<<< HEAD
 <div class="container">
     <h1 class="my-4">Digital Products</h1>
 
@@ -94,5 +95,55 @@
         </div>
         {% endfor %}
     </div>
+=======
+<h2>Products</h2>
+
+<form method="get" class="search-form">
+    <div class="form-group">
+        <input type="text" name="search" placeholder="Search products..." value="{{ request.args.get('search', '') }}">
+    </div>
+
+    <div class="form-group">
+        <label for="min_price">Min Price:</label>
+        <input type="number" name="min_price" id="min_price" step="0.01"
+            value="{{ request.args.get('min_price', '') }}">
+    </div>
+
+    <div class="form-group">
+        <label for="max_price">Max Price:</label>
+        <input type="number" name="max_price" id="max_price" step="0.01"
+            value="{{ request.args.get('max_price', '') }}">
+    </div>
+
+    <div class="form-group">
+        <label for="creator">Creator:</label>
+        <input type="text" name="creator" id="creator" value="{{ request.args.get('creator', '') }}">
+    </div>
+
+    <button type="submit">Filter</button>
+</form>
+
+<div class="product-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <h3>{{ product.name }}</h3>
+        <p>{{ product.description }}</p>
+        <p class="price">${{ "%.2f"|format(product.price) }}</p>
+        <p class="creator">By: {{ product.creator.username }}</p>
+
+        {% if 'user_id' in session %}
+        {% if product.creator_id != session['user_id'] %}
+        <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn">Add to Cart</a>
+        {% else %}
+        <span class="btn disabled">Your Product</span>
+        {% endif %}
+        {% else %}
+        <a href="{{ url_for('login') }}" class="btn">Login to Buy</a>
+        {% endif %}
+    </div>
+    {% else %}
+    <p>No products found.</p>
+    {% endfor %}
+>>>>>>> c9fe6c5 (work)
 </div>
 {% endblock %}
