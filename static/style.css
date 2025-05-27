@@ -226,6 +226,9 @@ button:hover,
 .confirm-delete {
     color: #dc3545;
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 47ea5f7 (1)
 }
 /* Стили для страницы товара */
 .product-image-container {
@@ -276,6 +279,9 @@ button:hover,
 
 .card:hover .product-image {
     transform: scale(1.05);
+<<<<<<< HEAD
 =======
 >>>>>>> c9fe6c5 (work)
+=======
+>>>>>>> 47ea5f7 (1)
 }

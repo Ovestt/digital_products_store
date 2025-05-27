@@ -63,6 +63,7 @@ with app.app_context():
 @app.route('/')
 def index():
 <<<<<<< HEAD
+<<<<<<< HEAD
     # Получаем параметры фильтрации
     search_query = request.args.get('search', '')
     min_price = request.args.get('min_price', type=float)
@@ -95,19 +96,43 @@ def index():
     
 =======
     search = request.args.get('search', '')
+=======
+    # Получаем параметры фильтрации
+    search_query = request.args.get('search', '')
+>>>>>>> 47ea5f7 (1)
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
+    creator_filter = request.args.get('creator', '')
     
-    query = Product.query
-    if search:
-        query = query.filter(Product.name.contains(search) | Product.description.contains(search))
-    if min_price:
+    # Базовый запрос
+    query = Product.query.join(User)  # Добавляем join с User для фильтрации по автору
+    
+    # Применяем фильтры
+    if search_query:
+        query = query.filter(
+            db.or_(
+                Product.name.ilike(f'%{search_query}%'),
+                Product.description.ilike(f'%{search_query}%')
+            )
+        )
+    
+    if min_price is not None:
         query = query.filter(Product.price >= min_price)
-    if max_price:
+    
+    if max_price is not None:
         query = query.filter(Product.price <= max_price)
     
+<<<<<<< HEAD
     products = query.all()
 >>>>>>> c9fe6c5 (work)
+=======
+    if creator_filter:
+        query = query.filter(User.username.ilike(f'%{creator_filter}%'))
+    
+    # Получаем товары
+    products = query.order_by(Product.id.desc()).all()
+    
+>>>>>>> 47ea5f7 (1)
     return render_template('index.html', products=products)
 
 # Регистрация
@@ -355,6 +380,9 @@ def delete_product(product_id):
     return redirect(url_for('my_products'))
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 47ea5f7 (1)
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     product = Product.query.get_or_404(product_id)
@@ -373,8 +401,11 @@ def product_detail(product_id):
         in_cart=in_cart
     )
 
+<<<<<<< HEAD
 =======
 >>>>>>> c9fe6c5 (work)
+=======
+>>>>>>> 47ea5f7 (1)
 if __name__ == '__main__':
     app.run(debug=True)
 
