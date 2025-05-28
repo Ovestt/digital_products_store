@@ -225,14 +225,8 @@ button:hover,
 /* Подтверждение удаления */
 .confirm-delete {
     color: #dc3545;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 47ea5f7 (1)
-=======
->>>>>>> 3eca8e3 (work)
 }
+
 /* Стили для страницы товара */
 .product-image-container {
     max-height: 500px;
@@ -282,14 +276,17 @@ button:hover,
 
 .card:hover .product-image {
     transform: scale(1.05);
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> c9fe6c5 (work)
-=======
->>>>>>> 47ea5f7 (1)
-=======
-=======
->>>>>>> c9fe6c5 (work)
->>>>>>> 3eca8e3 (work)
+}
+
+.pagination {
+    margin-top: 20px;
+}
+
+.page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.page-link {
+    color: #007bff;
 }

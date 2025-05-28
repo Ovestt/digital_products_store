@@ -68,6 +68,8 @@ def index():
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
     creator_filter = request.args.get('creator', '')
+    page = request.args.get('page', 1, type=int)  # Добавляем параметр страницы
+    per_page = 10  # Количество товаров на странице
     
     # Базовый запрос
     query = Product.query.join(User)  # Добавляем join с User для фильтрации по автору
@@ -90,10 +92,10 @@ def index():
     if creator_filter:
         query = query.filter(User.username.ilike(f'%{creator_filter}%'))
     
-    # Получаем товары
-    products = query.order_by(Product.id.desc()).all()
+    # Получаем товары с пагинацией
+    products_pagination = query.order_by(Product.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    products = products_pagination.items
     
-    return render_template('index.html', products=products)
     # Получаем товары в корзине текущего пользователя (если он авторизован)
     current_user_cart = []
     if 'user_id' in session:
@@ -103,8 +105,10 @@ def index():
     return render_template(
         'index.html', 
         products=products,
-        current_user_cart=current_user_cart  # Передаем список ID товаров в корзине
+        current_user_cart=current_user_cart,
+        pagination=products_pagination  # Передаем объект пагинации в шаблон
     )
+
 
 # Регистрация
 @app.route('/register', methods=['GET', 'POST'])
@@ -164,18 +168,24 @@ def add_product():
             flash('Invalid files')
             return redirect(url_for('add_product'))
         
-        cover_path = os.path.join(app.config['UPLOAD_FOLDER'], f"cover_{session['user_id']}_{secure_filename(cover.filename)}")
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"product_{session['user_id']}_{secure_filename(product_file.filename)}")        
+        # Генерируем только имя файла без полного пути
+        cover_filename = f"cover_{session['user_id']}_{secure_filename(cover.filename)}"
+        product_filename = f"product_{session['user_id']}_{secure_filename(product_file.filename)}"
+        
+        # Сохраняем файлы
+        cover_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], product_filename)
         
         cover.save(cover_path)
         product_file.save(file_path)
         
+        # Сохраняем только имена файлов, а не полные пути
         product = Product(
             name=request.form['name'],
             description=request.form['description'],
             price=float(request.form['price']),
-            cover_image=cover_path,
-            file_path=file_path,
+            cover_image=cover_filename,  # Только имя файла
+            file_path=product_filename,  # Только имя файла
             creator_id=session['user_id']
         )
         db.session.add(product)

@@ -11,7 +11,7 @@
         <img src="{{ url_for('uploaded_file', filename=purchase.product.cover_image.split('/')[-1]) }}"
             alt="{{ purchase.product.name }}" width="200">
         <h3>{{ purchase.product.name }}</h3>
-        <p>{{ purchase.product.description }}</p>
+        <p>{{ purchase.product.description|truncate(100) }}</p>
         <a href="{{ url_for('download', product_id=purchase.product.id) }}" class="download-btn">Скачать</a>
     </div>
     {% endfor %}

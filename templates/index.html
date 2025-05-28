@@ -45,7 +45,8 @@
         <div class="col">
             <div class="card h-100">
                 <a href="{{ url_for('product_detail', product_id=product.id) }}">
-                    <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}" class="card-img-top product-image" alt="{{ product.name }}"> 
+                    <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}"
+                        class="card-img-top product-image" alt="{{ product.name }}">
                 </a>
 
                 <div class="card-body">
@@ -56,7 +57,7 @@
                         </a>
                     </h5>
 
-                    <p class="card-text text-truncate">{{ product.description }}</p>
+                    <p class="card-text text-truncate">{{ product.description|truncate(100) }}</p>
                     <p class="text-success fw-bold">{{ "%.2f"|format(product.price) }} ₽</p>
                     <p class="text-muted small">Автор: {{ product.creator.username }}</p>
                 </div>
@@ -92,5 +93,56 @@
         </div>
         {% endfor %}
     </div>
+    <!-- Пагинация -->
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if pagination.has_prev %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="{{ url_for('index', page=pagination.prev_num, search=request.args.get('search'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), creator=request.args.get('creator')) }}">
+                    &laquo; Назад
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">&laquo; Назад</span>
+            </li>
+            {% endif %}
+
+            {% for page_num in pagination.iter_pages() %}
+            {% if page_num %}
+            {% if page_num == pagination.page %}
+            <li class="page-item active">
+                <span class="page-link">{{ page_num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="{{ url_for('index', page=page_num, search=request.args.get('search'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), creator=request.args.get('creator')) }}">
+                    {{ page_num }}
+                </a>
+            </li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="{{ url_for('index', page=pagination.next_num, search=request.args.get('search'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), creator=request.args.get('creator')) }}">
+                    Вперед &raquo;
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Вперед &raquo;</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
 </div>
 {% endblock %}
