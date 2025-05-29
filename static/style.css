@@ -290,3 +290,36 @@ button:hover,
 .page-link {
     color: #007bff;
 }
+
+.page-title {
+    margin-bottom: 2rem;
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 1.8rem;
+}
+
+.no-products {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--white);
+    border-radius: 8px;
+    color: var(--text-secondary);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-outline:hover {
+    background-color: rgba(3, 169, 244, 0.1);
+}

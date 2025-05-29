@@ -1,22 +1,43 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Ваш профиль</h1>
-<h2>Купленные товары</h2>
+<div class="page-container">
+    <h1 class="page-title">Ваш профиль</h1>
 
-{% if purchases %}
-<div class="products">
-    {% for purchase in purchases %}
-    <div class="product">
-        <img src="{{ url_for('uploaded_file', filename=purchase.product.cover_image.split('/')[-1]) }}"
-            alt="{{ purchase.product.name }}" width="200">
-        <h3>{{ purchase.product.name }}</h3>
-        <p>{{ purchase.product.description|truncate(100) }}</p>
-        <a href="{{ url_for('download', product_id=purchase.product.id) }}" class="download-btn">Скачать</a>
+    <div class="profile-header">
+        <h2><i class="bi bi-person-circle"></i> {{ session['username'] }}</h2>
     </div>
-    {% endfor %}
+
+    <div class="section">
+        <h3 class="section-title"><i class="bi bi-download"></i> Купленные товары</h3>
+
+        {% if purchases %}
+        <div class="products-grid">
+            {% for purchase in purchases %}
+            <div class="product-card">
+                <img src="{{ url_for('uploaded_file', filename=purchase.product.cover_image.split('/')[-1]) }}"
+                    alt="{{ purchase.product.name }}" class="product-image">
+
+                <div class="product-info">
+                    <h3 class="product-title">{{ purchase.product.name }}</h3>
+                    <p class="product-price">{{ "%.2f"|format(purchase.product.price) }} ₽</p>
+
+                    <div class="product-actions single-action">
+                        <a href="{{ url_for('download', product_id=purchase.product.id) }}" class="btn btn-primary">
+                            <i class="bi bi-download"></i> Скачать
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-cart-x" style="font-size: 3rem; color: #bdbdbd;"></i>
+            <p>Вы еще не покупали товары</p>
+            <a href="/" class="btn btn-primary">Перейти к товарам</a>
+        </div>
+        {% endif %}
+    </div>
 </div>
-{% else %}
-<p>Вы еще не покупали товары.</p>
-{% endif %}
 {% endblock %}

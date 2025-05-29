@@ -1,23 +1,59 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="product-detail">
-    <h1>{{ product.name }}</h1>
-    <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}" alt="{{ product.name }}" width="300">    
-    <p>{{ product.description }}</p>
-    <p class="price">{{ product.price }} ₽</p>
-    <p>Автор: {{ product.creator.username }}</p>
+<div class="product-detail-container">
+    <div class="product-detail-card">
+        <div class="product-gallery">
+            <div class="main-image">
+                <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}"
+                    alt="{{ product.name }}" class="product-detail-image">
+            </div>
+        </div>
 
-    {% if 'user_id' in session and product.creator_id != session['user_id'] %}
-    {% if in_cart %}
-    <button class="btn btn-success" disabled>
-        <i class="bi bi-check"></i> В корзине
-    </button>
-    {% else %}
-    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-primary">
-        <i class="bi bi-cart-plus"></i> Добавить в корзину
-    </a>
-    {% endif %}
-    {% endif %}
+        <div class="product-info">
+            <div class="product-header">
+                <h1 class="product-title">{{ product.name }}</h1>
+                <div class="product-meta">
+                    <span class="author">Автор: {{ product.creator.username }}</span>
+                </div>
+            </div>
+
+            <div class="product-price-section">
+                <span class="price">{{ "%.2f"|format(product.price) }} ₽</span>
+            </div>
+
+            <div class="product-description">
+                <h3>Описание</h3>
+                <p>{{ product.description }}</p>
+            </div>
+
+            <div class="product-actions">
+                {% if 'user_id' in session %}
+                {% if product.creator_id != session['user_id'] %}
+                {% if in_cart %}
+                <button class="btn btn-success btn-large" disabled>
+                    <i class="bi bi-check-circle"></i> В корзине
+                </button>
+                {% else %}
+                <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-primary btn-large">
+                    <i class="bi bi-cart-plus"></i> Добавить в корзину
+                </a>
+                {% endif %}
+                {% else %}
+                <div class="owner-actions">
+                    <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-outline">
+                        <i class="bi bi-pencil"></i> Редактировать
+                    </a>
+                </div>
+                {% endif %}
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-large">
+                    <i class="bi bi-box-arrow-in-right"></i> Войдите, чтобы купить
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

@@ -1,22 +1,44 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Ваша корзина</h1>
+<div class="page-container">
+    <h1 class="page-title">Ваша корзина</h1>
 
-{% if products %}
-{% for product in products %}
-<div class="product">
-    <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}" alt="{{ product.name }}" width="200">    <h3>{{ product.name }}</h3>
-    <img src="{{ url_for('static', filename=product.cover_image) }}" alt="{{ product.name }}" width="200">
-    <h3>{{ product.name }}</h3>
-    <p>Цена: {{ product.price }} ₽</p>
-    <a href="/remove_from_cart/{{ product.id }}">Удалить</a>
+    {% if products %}
+    <div class="products-grid">
+        {% for product in products %}
+        <div class="product-card">
+            <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}"
+                alt="{{ product.name }}" class="product-image">
+
+            <div class="product-info">
+                <h3 class="product-title">{{ product.name }}</h3>
+                <p class="product-price">{{ "%.2f"|format(product.price) }} ₽</p>
+
+                <div class="product-actions single-action">
+                    <a href="/remove_from_cart/{{ product.id }}" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Удалить
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="cart-summary">
+        <div class="summary-card">
+            <h3>Итого: {{ "%.2f"|format(total) }} ₽</h3>
+            <a href="/checkout" class="btn btn-primary btn-large">
+                <i class="bi bi-credit-card"></i> Оформить заказ
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-cart-x" style="font-size: 3rem; color: #bdbdbd;"></i>
+        <p>Ваша корзина пуста</p>
+        <a href="/" class="btn btn-outline">Вернуться к покупкам</a>
+    </div>
+    {% endif %}
 </div>
-{% endfor %}
-
-<p><strong>Итого: {{ total }} ₽</strong></p>
-<a href="/checkout" class="checkout-btn">Оформить заказ</a>
-{% else %}
-<p>Ваша корзина пуста</p>
-{% endif %}
 {% endblock %}

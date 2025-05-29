@@ -48,14 +48,12 @@ class Purchase(db.Model):
     product = db.relationship('Product', back_populates='purchases')
     user = db.relationship('User', back_populates='purchases')
 
-# Создаем папку для загрузок
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-# Создаем таблицы в базе данных
 with app.app_context():
     db.create_all()
     print("Все таблицы успешно созданы!")
@@ -68,11 +66,10 @@ def index():
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
     creator_filter = request.args.get('creator', '')
-    page = request.args.get('page', 1, type=int)  # Добавляем параметр страницы
-    per_page = 10  # Количество товаров на странице
+    page = request.args.get('page', 1, type=int)
+    per_page = 64
     
-    # Базовый запрос
-    query = Product.query.join(User)  # Добавляем join с User для фильтрации по автору
+    query = Product.query.join(User)
     
     # Применяем фильтры
     if search_query:
@@ -126,7 +123,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         
-        flash('Registration successful. Please login.')
+        flash('Регистрация успешна. Пожалуйста залогиньтесь.')
         return redirect(url_for('login'))
     
     return render_template('register.html')
@@ -144,7 +141,7 @@ def login():
             session['username'] = user.username
             return redirect(url_for('index'))
         else:
-            flash('Invalid credentials')
+            flash('Неверный логин или пароль')
     
     return render_template('login.html')
 
@@ -165,27 +162,24 @@ def add_product():
         product_file = request.files['product_file']
         
         if not (cover and product_file and allowed_file(cover.filename) and allowed_file(product_file.filename)):
-            flash('Invalid files')
+            flash('Неверный формат')
             return redirect(url_for('add_product'))
         
-        # Генерируем только имя файла без полного пути
         cover_filename = f"cover_{session['user_id']}_{secure_filename(cover.filename)}"
         product_filename = f"product_{session['user_id']}_{secure_filename(product_file.filename)}"
-        
-        # Сохраняем файлы
+
         cover_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], product_filename)
         
         cover.save(cover_path)
         product_file.save(file_path)
         
-        # Сохраняем только имена файлов, а не полные пути
         product = Product(
             name=request.form['name'],
             description=request.form['description'],
             price=float(request.form['price']),
-            cover_image=cover_filename,  # Только имя файла
-            file_path=product_filename,  # Только имя файла
+            cover_image=cover_filename, 
+            file_path=product_filename,
             creator_id=session['user_id']
         )
         db.session.add(product)
@@ -217,9 +211,9 @@ def add_to_cart(product_id):
         cart_item = Cart(user_id=session['user_id'], product_id=product_id)
         db.session.add(cart_item)
         db.session.commit()
-        flash('Product added to cart')
+        flash('Товар добавлен в корзину')
     else:
-        flash('Product is already in your cart')
+        flash('Товар уже в корзине')
     
     return redirect(url_for('index'))
 
@@ -242,7 +236,7 @@ def checkout():
     cart_items = Cart.query.filter_by(user_id=session['user_id']).all()
     
     if not cart_items:
-        flash('Your cart is empty')
+        flash('Ваша корзина пуста')
         return redirect(url_for('cart'))
     
     # Добавляем все товары в покупки
@@ -254,7 +248,7 @@ def checkout():
     Cart.query.filter_by(user_id=session['user_id']).delete()
     db.session.commit()
     
-    flash('Purchase completed! Check your profile to download products.')
+    flash('Оплата прошла! Проверьте ваш профиль, чтобы скачать товар.')
     return redirect(url_for('profile'))
 
 # Скачивание товара
@@ -265,7 +259,7 @@ def download(product_id):
     
     # Проверяем, что товар куплен
     if not Purchase.query.filter_by(user_id=session['user_id'], product_id=product_id).first():
-        flash('You have not purchased this product')
+        flash('Вы не приобретали этот товар')
         return redirect(url_for('profile'))
     
     product = Product.query.get(product_id)
@@ -325,11 +319,11 @@ def edit_product(product_id):
                     product.cover_image = cover_path
             
             db.session.commit()
-            flash('Product updated successfully!', 'success')
+            flash('Товар успешно обновлен', 'success')
             return redirect(url_for('my_products'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error updating product: {str(e)}', 'error')
+            flash(f'Ошибка обновления товара: {str(e)}', 'error')
     
     return render_template('edit_product.html', product=product)
 
@@ -341,7 +335,7 @@ def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
     
     if product.creator_id != session['user_id']:
-        flash('You can only delete your own products', 'error')
+        flash('Вы можете удалить только свои собственные товары', 'error')
         return redirect(url_for('my_products'))
     
     try:
@@ -353,10 +347,10 @@ def delete_product(product_id):
         
         db.session.delete(product)
         db.session.commit()
-        flash('Product deleted successfully!', 'success')
+        flash('Товар успешно удалён', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Error deleting product: {str(e)}', 'error')
+        flash(f'Ошибка удаления товара: {str(e)}', 'error')
     
     return redirect(url_for('my_products'))
 

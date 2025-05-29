@@ -1,148 +1,84 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1 class="my-4">Цифровые товары</h1>
+<h1 class="page-title">Цифровые товары</h1>
 
-    <!-- Форма фильтрации -->
-    <form method="get" class="mb-4">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <input type="text" name="search" class="form-control" placeholder="Поиск..."
-                    value="{{ request.args.get('search', '') }}">
-            </div>
-            <div class="col-md-2">
-                <input type="number" name="min_price" class="form-control" placeholder="Мин. цена" step="0.01"
-                    value="{{ request.args.get('min_price', '') }}">
-            </div>
-            <div class="col-md-2">
-                <input type="number" name="max_price" class="form-control" placeholder="Макс. цена" step="0.01"
-                    value="{{ request.args.get('max_price', '') }}">
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="creator" class="form-control" placeholder="Имя автора"
-                    value="{{ request.args.get('creator', '') }}">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Фильтр</button>
-            </div>
-        </div>
+{% if products %}
+<div class="products-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <a href="{{ url_for('product_detail', product_id=product.id) }}">
+            <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}"
+                alt="{{ product.name }}" class="product-image">
+        </a>
 
-        <!-- Кнопка сброса -->
-        {% if request.args.get('search') or request.args.get('min_price') or request.args.get('max_price') or
-        request.args.get('creator') %}
-        <div class="mt-3">
-            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-x-circle"></i> Сбросить фильтры
-            </a>
-        </div>
-        {% endif %}
-    </form>
-
-    <!-- Карточки товаров -->
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% for product in products %}
-        <div class="col">
-            <div class="card h-100">
+        <div class="product-info">
+            <h3 class="product-title">
                 <a href="{{ url_for('product_detail', product_id=product.id) }}">
-                    <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}"
-                        class="card-img-top product-image" alt="{{ product.name }}">
+                    {{ product.name }}
+                </a>
+            </h3>
+
+            <p class="product-price">{{ "%.2f"|format(product.price) }} ₽</p>
+            <p class="product-author">Автор: {{ product.creator.username }}</p>
+
+            <div class="product-actions">
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline">
+                    <i class="bi bi-eye"></i> Подробнее
                 </a>
 
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <a href="{{ url_for('product_detail', product_id=product.id) }}"
-                            class="text-decoration-none text-dark">
-                            {{ product.name }}
-                        </a>
-                    </h5>
-
-                    <p class="card-text text-truncate">{{ product.description|truncate(100) }}</p>
-                    <p class="text-success fw-bold">{{ "%.2f"|format(product.price) }} ₽</p>
-                    <p class="text-muted small">Автор: {{ product.creator.username }}</p>
-                </div>
-
-                <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{{ url_for('product_detail', product_id=product.id) }}"
-                            class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-eye"></i> Подробнее
-                        </a>
-
-                        {% if 'user_id' in session and product.creator_id != session['user_id'] %}
-                        {% set in_cart = product.id in current_user_cart %}
-                        {% if in_cart %}
-                        <button class="btn btn-sm btn-success" disabled>
-                            <i class="bi bi-check"></i> В корзине
-                        </button>
-                        {% else %}
-                        <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-cart-plus"></i> В корзину
-                        </a>
-                        {% endif %}
-                        {% endif %}
-                    </div>
-                </div>
+                {% if 'user_id' in session and product.creator_id != session['user_id'] %}
+                {% if product.id in current_user_cart %}
+                <button class="btn btn-primary" disabled>
+                    <i class="bi bi-check"></i> В корзине
+                </button>
+                {% else %}
+                <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-primary">
+                    <i class="bi bi-cart-plus"></i> В корзину
+                </a>
+                {% endif %}
+                {% endif %}
             </div>
         </div>
-        {% else %}
-        <div class="col-12">
-            <div class="alert alert-info">
-                Товары не найдены. Попробуйте изменить параметры фильтрации.
-            </div>
-        </div>
-        {% endfor %}
     </div>
-    <!-- Пагинация -->
-    <nav aria-label="Page navigation" class="mt-4">
-        <ul class="pagination justify-content-center">
-            {% if pagination.has_prev %}
-            <li class="page-item">
-                <a class="page-link"
-                    href="{{ url_for('index', page=pagination.prev_num, search=request.args.get('search'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), creator=request.args.get('creator')) }}">
-                    &laquo; Назад
-                </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">&laquo; Назад</span>
-            </li>
-            {% endif %}
-
-            {% for page_num in pagination.iter_pages() %}
-            {% if page_num %}
-            {% if page_num == pagination.page %}
-            <li class="page-item active">
-                <span class="page-link">{{ page_num }}</span>
-            </li>
-            {% else %}
-            <li class="page-item">
-                <a class="page-link"
-                    href="{{ url_for('index', page=page_num, search=request.args.get('search'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), creator=request.args.get('creator')) }}">
-                    {{ page_num }}
-                </a>
-            </li>
-            {% endif %}
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">...</span>
-            </li>
-            {% endif %}
-            {% endfor %}
-
-            {% if pagination.has_next %}
-            <li class="page-item">
-                <a class="page-link"
-                    href="{{ url_for('index', page=pagination.next_num, search=request.args.get('search'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), creator=request.args.get('creator')) }}">
-                    Вперед &raquo;
-                </a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">Вперед &raquo;</span>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
+    {% endfor %}
 </div>
+{% else %}
+<div class="no-products">
+    <p>Товары не найдены. Попробуйте изменить параметры поиска.</p>
+</div>
+{% endif %}
+
+{% if pagination.pages > 1 %}
+<div class="pagination">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('index', page=pagination.prev_num, search=request.args.get('search'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), creator=request.args.get('creator')) }}"
+        class="page-link">
+        &laquo; Назад
+    </a>
+    {% endif %}
+
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+    {% if page_num %}
+    {% if page_num == pagination.page %}
+    <span class="page-link active">{{ page_num }}</span>
+    {% else %}
+    <a href="{{ url_for('index', page=page_num, search=request.args.get('search'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), creator=request.args.get('creator')) }}"
+        class="page-link">
+        {{ page_num }}
+    </a>
+    {% endif %}
+    {% else %}
+    <span class="page-link">...</span>
+    {% endif %}
+    {% endfor %}
+
+    {% if pagination.has_next %}
+    <a href="{{ url_for('index', page=pagination.next_num, search=request.args.get('search'), min_price=request.args.get('min_price'), max_price=request.args.get('max_price'), creator=request.args.get('creator')) }}"
+        class="page-link">
+        Вперед &raquo;
+    </a>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}
