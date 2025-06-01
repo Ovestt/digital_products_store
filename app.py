@@ -17,6 +17,7 @@ db = SQLAlchemy(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
+    search_username = db.Column(db.String(80), nullable=False)
     password = db.Column(db.String(120), nullable=False)
     products = db.relationship('Product', backref='creator', lazy=True)
     purchases = db.relationship('Purchase', back_populates='user', lazy=True)
@@ -25,6 +26,7 @@ class User(db.Model):
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    search_name = db.Column(db.String(100), nullable=False) 
     description = db.Column(db.Text, nullable=False)
     price = db.Column(db.Float, nullable=False)
     cover_image = db.Column(db.String(200), nullable=False)
@@ -77,14 +79,10 @@ def index():
     
     query = Product.query.join(User)
     
+    
     if search_query:
         search_lower = search_query.lower()
-        query = query.filter(
-            db.or_(
-                func.lower(Product.name).contains(search_lower)
-            )
-        )
-    
+        query = query.filter(Product.search_name.like(f"%{search_lower}%"))
     if min_price is not None:
         query = query.filter(Product.price >= min_price)
     
@@ -92,7 +90,8 @@ def index():
         query = query.filter(Product.price <= max_price)
     
     if creator_filter:
-        query = query.filter(User.username.ilike(f'%{creator_filter}%'))
+        creator_lower = creator_filter.lower()
+        query = query.filter(User.search_username.like(f"%{creator_lower}%"))
     
     # Получаем товары с пагинацией
     products_pagination = query.order_by(Product.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
@@ -124,7 +123,7 @@ def register():
             return redirect(url_for('register'))
         
         hashed_pw = generate_password_hash(password)
-        new_user = User(username=username, password=hashed_pw)
+        new_user = User(username=username, search_username=username.lower(), password=hashed_pw)
         db.session.add(new_user)
         db.session.commit()
         
@@ -205,6 +204,7 @@ def add_product():
         # Создание продукта
         product = Product(
             name=request.form['name'],
+            search_name=request.form['name'].lower(),
             description=request.form['description'],
             price=float(request.form['price']),
             cover_image=cover_filename if cover_filename else 'default_cover.png',
