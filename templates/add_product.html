@@ -2,46 +2,35 @@
 
 {% block content %}
 <div class="form-container">
-    <h1 class="page-title">{% block form_title %}{% endblock %}</h1>
+    <h1 class="page-title">{% block form_title %}Добавить товар{% endblock %}</h1>
 
     <form method="post" enctype="multipart/form-data" class="product-form">
         <div class="form-group">
             <label for="name">Название товара</label>
-            <input type="text" id="name" name="name" value="{{ product.name if product }}" required>
+            <input type="text" id="name" name="name" value="{{ name if name }}" required>
         </div>
 
         <div class="form-group">
             <label for="description">Описание</label>
-            <textarea id="description" name="description" required>{{ product.description if product }}</textarea>
+            <textarea id="description" name="description" required>{{ description if description }}</textarea>
         </div>
 
         <div class="form-group">
             <label for="price">Цена (₽)</label>
-            <input type="number" id="price" name="price" step="0.01" value="{{ " %.2f"|format(product.price) if product
-                else '' }}" required>
+            <input type="number" id="price" name="price" step="0.01"
+                value="{{ '%.2f'|format(price|float) if price else '' }}" required>
         </div>
+
 
         <div class="form-row">
             <div class="form-group">
-                <label for="cover">Обложка</label>
-                <input type="file" id="cover" name="cover" accept="image/*" {% if not product %}required{% endif %}>
-                {% if product %}
-                <div class="current-file">
-                    Текущая: <a href="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}"
-                        target="_blank">Просмотреть</a>
-                </div>
-                {% endif %}
+                <label for="cover">Обложка (png, jpg, jpeg, gif)</label>
+                <input type="file" id="cover" name="cover" accept="image/*">
             </div>
 
             <div class="form-group">
-                <label for="product_file">Файл товара</label>
-                <input type="file" id="product_file" name="product_file" {% if not product %}required{% endif %}>
-                {% if product %}
-                <div class="current-file">
-                    Текущий: <a href="{{ url_for('uploaded_file', filename=product.file_path.split('/')[-1]) }}"
-                        target="_blank">Скачать</a>
-                </div>
-                {% endif %}
+                <label for="product_file">Файл товара (zip, pdf, rar)</label>
+                <input type="file" id="product_file" name="product_file" required>
             </div>
         </div>
 

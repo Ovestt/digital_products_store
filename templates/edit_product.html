@@ -17,13 +17,13 @@
 
         <div class="form-group">
             <label for="price">Цена (₽)</label>
-            <input type="number" id="price" name="price" step="0.01" value="{{ " %.2f"|format(product.price) if product
-                else '' }}" required>
+            <input type="number" id="price" name="price" step="0.01"
+                value="{% if product %}{{ '%.2f'|format(product.price) }}{% endif %}" required>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label for="cover">Обложка</label>
+                <label for="cover">Обложка (png, jpg, jpeg, gif)</label>
                 <input type="file" id="cover" name="cover" accept="image/*" {% if not product %}required{% endif %}>
                 {% if product %}
                 <div class="current-file">
@@ -34,7 +34,7 @@
             </div>
 
             <div class="form-group">
-                <label for="product_file">Файл товара</label>
+                <label for="product_file">Файл товара (zip, pdf, rar)</label>
                 <input type="file" id="product_file" name="product_file" {% if not product %}required{% endif %}>
                 {% if product %}
                 <div class="current-file">

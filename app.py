@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from sqlalchemy import func
 import os
 
 app = Flask(__name__, template_folder='templates')
@@ -9,7 +10,8 @@ app.config['SECRET_KEY'] = 'your-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'zip', 'pdf'}
+app.config['ALLOWED_EXTENSIONS_COVER'] = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['ALLOWED_EXTENSIONS_PRODUCT'] = {'zip', 'pdf', 'rar'}
 db = SQLAlchemy(app)
 
 class User(db.Model):
@@ -50,9 +52,12 @@ class Purchase(db.Model):
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-def allowed_file(filename):
+def allowed_file_cover(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_COVER']
+def allowed_file_product(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_PRODUCT']
 
 with app.app_context():
     db.create_all()
@@ -60,23 +65,23 @@ with app.app_context():
 
 # Главная страница
 @app.route('/')
+
 def index():
     # Получаем параметры фильтрации
-    search_query = request.args.get('search', '')
+    search_query = request.args.get('search', '').strip()
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
-    creator_filter = request.args.get('creator', '')
+    creator_filter = request.args.get('creator', '').strip()
     page = request.args.get('page', 1, type=int)
     per_page = 64
     
     query = Product.query.join(User)
     
-    # Применяем фильтры
     if search_query:
+        search_lower = search_query.lower()
         query = query.filter(
             db.or_(
-                Product.name.ilike(f'%{search_query}%'),
-                Product.description.ilike(f'%{search_query}%')
+                func.lower(Product.name).contains(search_lower)
             )
         )
     
@@ -158,36 +163,60 @@ def add_product():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
+        form_data = {
+            'name': request.form.get('name', ''),
+            'description': request.form.get('description', ''),
+            'price': request.form.get('price', '')
+        }
         cover = request.files['cover']
         product_file = request.files['product_file']
         
-        if not (cover and product_file and allowed_file(cover.filename) and allowed_file(product_file.filename)):
-            flash('Неверный формат')
-            return redirect(url_for('add_product'))
-        
-        cover_filename = f"cover_{session['user_id']}_{secure_filename(cover.filename)}"
-        product_filename = f"product_{session['user_id']}_{secure_filename(product_file.filename)}"
+        error_occurred = False
 
-        cover_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], product_filename)
+        # Проверка файла товара
+        if not (product_file and allowed_file_product(product_file.filename)):
+            flash('Неверный формат товара')
+            error_occurred = True
         
-        cover.save(cover_path)
+        # Проверка обложки
+        if cover and cover.filename != '':
+            if not allowed_file_cover(cover.filename):
+                flash('Неверный формат обложки')
+                error_occurred = True
+        
+        if error_occurred:
+            return render_template('add_product.html', 
+                                name=form_data['name'],
+                                description=form_data['description'],
+                                price=form_data['price'])
+        
+        # Обработка файла товара (обязательного)
+        product_filename = f"product_{session['user_id']}_{secure_filename(product_file.filename)}"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], product_filename)
         product_file.save(file_path)
         
+        # Обработка обложки (необязательной)
+        cover_filename = None
+        if cover and cover.filename != '':
+            cover_filename = f"cover_{session['user_id']}_{secure_filename(cover.filename)}"
+            cover_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_filename)
+            cover.save(cover_path)
+        
+        # Создание продукта
         product = Product(
             name=request.form['name'],
             description=request.form['description'],
             price=float(request.form['price']),
-            cover_image=cover_filename, 
+            cover_image=cover_filename if cover_filename else 'default_cover.png',
             file_path=product_filename,
             creator_id=session['user_id']
         )
+        
         db.session.add(product)
         db.session.commit()
         return redirect(url_for('index'))
     
     return render_template('add_product.html')
-
 # Корзина
 @app.route('/cart')
 def cart():
@@ -262,10 +291,19 @@ def download(product_id):
         flash('Вы не приобретали этот товар')
         return redirect(url_for('profile'))
     
-    product = Product.query.get(product_id)
+    product = Product.query.get_or_404(product_id)
+    
+    # Полный путь к файлу
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], product.file_path)
+    
+    # Проверяем существование файла
+    if not os.path.exists(file_path):
+        flash('Файл товара не найден')
+        return redirect(url_for('profile'))
+    
     return send_from_directory(
-        os.path.dirname(product.file_path),
-        os.path.basename(product.file_path),
+        app.config['UPLOAD_FOLDER'],
+        product.file_path,
         as_attachment=True
     )
 
@@ -295,9 +333,8 @@ def edit_product(product_id):
 
     product = Product.query.get_or_404(product_id)
     
-    # Проверяем, что товар принадлежит текущему пользователю
     if product.creator_id != session['user_id']:
-        flash('You can only edit your own products', 'error')
+        flash('Вы можете редактировать только свои товары', 'error')
         return redirect(url_for('my_products'))
 
     if request.method == 'POST':
@@ -306,17 +343,35 @@ def edit_product(product_id):
             product.description = request.form['description']
             product.price = float(request.form['price'])
             
-            # Обновляем обложку, если загружена новая
+            # Обработка новой обложки
             if 'cover' in request.files:
                 cover = request.files['cover']
-                if cover.filename != '' and allowed_file(cover.filename):
-                    # Удаляем старую обложку
-                    if os.path.exists(product.cover_image):
-                        os.remove(product.cover_image)
-                    # Сохраняем новую
-                    cover_path = os.path.join(app.config['UPLOAD_FOLDER'], f"cover_{session['user_id']}_{secure_filename(cover.filename)}")                    
+                if cover.filename != '' and allowed_file_cover(cover.filename):
+                    # Удаляем старую обложку, если она существует
+                    old_cover_path = os.path.join(app.config['UPLOAD_FOLDER'], product.cover_image)
+                    if os.path.exists(old_cover_path):
+                        os.remove(old_cover_path)
+                    
+                    # Сохраняем новую обложку
+                    cover_filename = f"cover_{session['user_id']}_{secure_filename(cover.filename)}"
+                    cover_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_filename)
                     cover.save(cover_path)
-                    product.cover_image = cover_path
+                    product.cover_image = cover_filename
+            
+            # Обработка нового файла товара
+            if 'product_file' in request.files:
+                product_file = request.files['product_file']
+                if product_file.filename != '' and allowed_file_product(product_file.filename):
+                    # Удаляем старый файл товара
+                    old_file_path = os.path.join(app.config['UPLOAD_FOLDER'], product.file_path)
+                    if os.path.exists(old_file_path):
+                        os.remove(old_file_path)
+                    
+                    # Сохраняем новый файл товара
+                    product_filename = f"product_{session['user_id']}_{secure_filename(product_file.filename)}"
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], product_filename)
+                    product_file.save(file_path)
+                    product.file_path = product_filename
             
             db.session.commit()
             flash('Товар успешно обновлен', 'success')
@@ -326,7 +381,6 @@ def edit_product(product_id):
             flash(f'Ошибка обновления товара: {str(e)}', 'error')
     
     return render_template('edit_product.html', product=product)
-
 @app.route('/delete_product/<int:product_id>', methods=['POST'])
 def delete_product(product_id):
     if 'user_id' not in session:

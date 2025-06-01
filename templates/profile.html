@@ -15,8 +15,8 @@
         <div class="products-grid">
             {% for purchase in purchases %}
             <div class="product-card">
-                <img src="{{ url_for('uploaded_file', filename=purchase.product.cover_image.split('/')[-1]) }}"
-                    alt="{{ purchase.product.name }}" class="product-image">
+                <img src="{{ url_for('uploaded_file', filename=purchase.product.cover_image) }}" alt="{{ purchase.product.name }}"
+                    class="product-image">
 
                 <div class="product-info">
                     <h3 class="product-title">{{ purchase.product.name }}</h3>
