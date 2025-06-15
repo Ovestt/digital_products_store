@@ -1,13 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div id="certificateModal" class="modal">
+    <span class="close-modal">&times;</span>
+    <div class="modal-content-container">
+        {% if product.copyright_doc.split('.')[-1].lower() == 'pdf' %}
+        <embed src="{{ url_for('uploaded_file', filename=product.copyright_doc) }}" type="application/pdf"
+            class="modal-content">
+        {% else %}
+        <img src="{{ url_for('uploaded_file', filename=product.copyright_doc) }}" class="modal-content"
+            alt="Документ об авторских правах">
+        {% endif %}
+    </div>
+</div>
+
 <div class="product-detail-container">
     <div class="product-detail-card">
         <div class="product-gallery">
-            <div class="main-image">
-                <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}"
-                    alt="{{ product.name }}" class="product-detail-image">
-            </div>
+            <img src="{{ url_for('uploaded_file', filename=product.cover_image.split('/')[-1]) }}"
+                alt="{{ product.name }}" class="product-detail-image">
         </div>
 
         <div class="product-info">
@@ -25,6 +36,23 @@
             <div class="product-description">
                 <h3>Описание</h3>
                 <p>{{ product.description }}</p>
+
+                <div class="copyright-section">
+                    <h3>Документ об авторских правах</h3>
+                    <div class="certificate-preview">
+                        {% if product.copyright_doc.split('.')[-1].lower() == 'pdf' %}
+                        <embed src="{{ url_for('uploaded_file', filename=product.copyright_doc) }}"
+                            type="application/pdf" class="preview-doc">
+                        {% else %}
+                        <img src="{{ url_for('uploaded_file', filename=product.copyright_doc) }}" class="preview-image"
+                            alt="Превью документа">
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('uploaded_file', filename=product.copyright_doc) }}"
+                        class="btn btn-outline download-btn" download>
+                        <i class="bi bi-download"></i> Скачать документ
+                    </a>
+                </div>
             </div>
 
             <div class="product-actions">
@@ -54,6 +82,37 @@
             </div>
         </div>
     </div>
-
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const modal = document.getElementById('certificateModal');
+        const preview = document.querySelector('.certificate-preview');
+        const closeBtn = document.querySelector('.close-modal');
+
+        if (preview) {
+            preview.addEventListener('click', function () {
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function () {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+        }
+
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

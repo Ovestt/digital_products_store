@@ -25,8 +25,10 @@
 
             <div class="nav-links">
                 {% if 'user_id' in session %}
+                {% if user and user.role == 'seller' %}
                 <a href="/add_product" class="nav-link"><i class="bi bi-plus-circle"></i> Добавить</a>
                 <a href="/my_products" class="nav-link"><i class="bi bi-collection"></i> Мои товары</a>
+                {% endif %}
                 <a href="/cart" class="nav-link"><i class="bi bi-cart"></i> Корзина</a>
                 <div class="dropdown">
                     <button class="dropdown-btn"><i class="bi bi-person"></i> {{ session['username'] }}</button>
@@ -39,7 +41,7 @@
                 </div>
                 {% else %}
                 <a href="/login" class="nav-link"><i class="bi bi-box-arrow-in-right"></i> Войти</a>
-                <a href="/register" class="nav-link"><i class="bi bi-person-plus"></i> Регистрация</a>
+                <a href="/register" class="nav-link"><i class="bi bi-person-plus"></i> Регистрация</a> 
                 {% endif %}
 
                 <div class="dropdown">

@@ -21,7 +21,6 @@
                 value="{{ '%.2f'|format(price|float) if price else '' }}" required>
         </div>
 
-
         <div class="form-row">
             <div class="form-group">
                 <label for="cover">Обложка (png, jpg, jpeg, gif)</label>
@@ -32,6 +31,12 @@
                 <label for="product_file">Файл товара (zip, pdf, rar)</label>
                 <input type="file" id="product_file" name="product_file" required>
             </div>
+        </div>
+
+        <div class="form-group">
+            <label for="copyright_doc">Документ об авторских правах (pdf, png, jpg, jpeg, gif)</label>
+            <input type="file" id="copyright_doc" name="copyright_doc" required>
+            <small class="form-text">Необходимо подтверждение авторских прав на товар</small>
         </div>
 
         <button type="submit" class="btn btn-primary btn-large">

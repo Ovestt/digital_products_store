@@ -12,6 +12,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS_COVER'] = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['ALLOWED_EXTENSIONS_PRODUCT'] = {'zip', 'pdf', 'rar'}
+app.config['ALLOWED_EXTENSIONS_DOCS'] = {'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 db = SQLAlchemy(app)
 
 class User(db.Model):
@@ -19,6 +20,8 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     search_username = db.Column(db.String(80), nullable=False)
     password = db.Column(db.String(120), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='user')
+    trade_permission = db.Column(db.String(200))
     products = db.relationship('Product', backref='creator', lazy=True)
     purchases = db.relationship('Purchase', back_populates='user', lazy=True)
     cart_items = db.relationship('Cart', back_populates='user', lazy=True)
@@ -31,10 +34,11 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     cover_image = db.Column(db.String(200), nullable=False)
     file_path = db.Column(db.String(200), nullable=False)
+    copyright_doc = db.Column(db.String(200), nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
     purchases = db.relationship('Purchase', back_populates='product', lazy=True, cascade='all, delete-orphan')
-    in_cart = db.relationship('Cart', back_populates='product', lazy=True)   
+    in_cart = db.relationship('Cart', back_populates='product', lazy=True) 
 
     def __repr__(self):
         return f'<Product {self.name}>'
@@ -60,6 +64,9 @@ def allowed_file_cover(filename):
 def allowed_file_product(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_PRODUCT']
+def allowed_file_docs(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS_DOCS']
 
 with app.app_context():
     db.create_all()
@@ -111,19 +118,40 @@ def index():
     )
 
 
+@app.context_processor
+def inject_user():
+    if 'user_id' in session:
+        user = User.query.get(session['user_id'])
+        return {'user': user}
+    return {}
+
 # Регистрация
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        role = request.form.get('role', 'user')
         
         if User.query.filter_by(username=username).first():
             flash('Username already exists')
             return redirect(url_for('register'))
         
         hashed_pw = generate_password_hash(password)
-        new_user = User(username=username, search_username=username.lower(), password=hashed_pw)
+        new_user = User(username=username, search_username=username.lower(), password=hashed_pw, role=role)
+        
+        # Если это продавец, файл разрешения на торговлю
+        if role == 'seller':
+            trade_permission_file = request.files['trade_permission']
+            if trade_permission_file and allowed_file_docs(trade_permission_file.filename):
+                filename = f"trade_permission_{username}_{secure_filename(trade_permission_file.filename)}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                trade_permission_file.save(filepath)
+                new_user.trade_permission = filename
+            else:
+                flash('Необходимо загрузить разрешение на торговлю (PDF, PNG, JPG, JPEG, GIF)')
+                return redirect(url_for('register'))
+        
         db.session.add(new_user)
         db.session.commit()
         
@@ -161,6 +189,11 @@ def add_product():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
+    user = User.query.get(session['user_id'])
+    if user.role != 'seller':
+        flash('Только продавцы могут добавлять товары')
+        return redirect(url_for('index'))
+    
     if request.method == 'POST':
         form_data = {
             'name': request.form.get('name', ''),
@@ -169,6 +202,7 @@ def add_product():
         }
         cover = request.files['cover']
         product_file = request.files['product_file']
+        copyright_doc = request.files['copyright_doc']
         
         error_occurred = False
 
@@ -183,23 +217,33 @@ def add_product():
                 flash('Неверный формат обложки')
                 error_occurred = True
         
+        # Проверка документа об авторских правах
+        if not (copyright_doc and allowed_file_docs(copyright_doc.filename)):
+            flash('Неверный формат документа об авторских правах')
+            error_occurred = True
+        
         if error_occurred:
             return render_template('add_product.html', 
                                 name=form_data['name'],
                                 description=form_data['description'],
                                 price=form_data['price'])
         
-        # Обработка файла товара (обязательного)
+        # Обработка файла товара
         product_filename = f"product_{session['user_id']}_{secure_filename(product_file.filename)}"
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], product_filename)
         product_file.save(file_path)
         
-        # Обработка обложки (необязательной)
+        # Обработка обложки
         cover_filename = None
         if cover and cover.filename != '':
             cover_filename = f"cover_{session['user_id']}_{secure_filename(cover.filename)}"
             cover_path = os.path.join(app.config['UPLOAD_FOLDER'], cover_filename)
             cover.save(cover_path)
+        
+        # Обработка документа об авторских правах
+        copyright_filename = f"copyright_{session['user_id']}_{secure_filename(copyright_doc.filename)}"
+        copyright_path = os.path.join(app.config['UPLOAD_FOLDER'], copyright_filename)
+        copyright_doc.save(copyright_path)
         
         # Создание продукта
         product = Product(
@@ -209,6 +253,7 @@ def add_product():
             price=float(request.form['price']),
             cover_image=cover_filename if cover_filename else 'default_cover.png',
             file_path=product_filename,
+            copyright_doc=copyright_filename,
             creator_id=session['user_id']
         )
         
@@ -432,4 +477,16 @@ def uploaded_file(filename):
 
 if __name__ == '__main__':
     app.run(debug=True)
-
+    
+@app.context_processor
+def inject_user():
+    if 'user_id' in session:
+        try:
+            user = User.query.get(session['user_id'])
+            if user:
+                return {'user': user}
+            else:
+                session.clear()
+        except:
+            session.clear()
+    return {}
